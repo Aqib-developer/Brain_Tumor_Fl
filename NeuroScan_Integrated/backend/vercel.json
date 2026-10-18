@@ -2,11 +2,11 @@
   "version": 2,
   "services": {
     "backend": {
-      "root": "NeuroScan_Integrated/backend",
+      "root": "backend",
       "framework": "express"
     },
     "frontend": {
-      "root": "NeuroScan_Integrated/frontend",
+      "root": "frontend",
       "framework": "vite"
     }
   },
