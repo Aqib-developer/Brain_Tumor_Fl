@@ -12,17 +12,23 @@ import cors from "cors";
 import { fileURLToPath } from "node:url";
 
 const envPath = fileURLToPath(new URL("./.env", import.meta.url));
-const envResult = dotenv.config({ path: envPath });
-if (envResult.error) {
-  throw new Error(`Cannot load backend .env: ${envResult.error.message}`);
-}
+// In Docker Compose, environment variables arrive via env_file/environment.
+// Loading a local .env remains optional for development outside containers.
+dotenv.config({ path: envPath, quiet: true });
 const SESSION_SECRET = process.env.SESSION_SECRET?.trim();
 if (!SESSION_SECRET) throw new Error("SESSION_SECRET is missing from backend/.env");
 console.log("Session secret loaded successfully:", true);
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+// Only the internal Nginx reverse proxy is intended to reach this container.
+app.set('trust proxy', 1);
+const allowedOrigins = (process.env.CLIENT_ORIGINS || 'http://localhost:5173,http://localhost:8080')
+  .split(',').map(x => x.trim()).filter(Boolean);
+app.use(cors({
+  origin: (origin, done) => done(null, !origin || allowedOrigins.includes(origin)),
+  credentials: true,
+}));
 
 const PgSession = connectPgSimple(session);
 app.use(session({
@@ -32,7 +38,7 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: false, // Local HTTP development only
+    secure: process.env.COOKIE_SECURE === 'true', // true only with HTTPS + trusted reverse proxy
     sameSite: "lax",
     maxAge: 24 * 60 * 60 * 1000,
   },

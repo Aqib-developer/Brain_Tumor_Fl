@@ -1,14 +1,102 @@
-﻿services:
+﻿name: neuroscan
+
+services:
+  db:
+    image: postgres:18-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:?Set DB_USER in backend/.env}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in backend/.env}
+      POSTGRES_DB: ${DB_NAME:?Set DB_NAME in backend/.env}
+    # PostgreSQL 18 expects the parent directory to be persisted.
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      - ./deploy/db-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", 'pg_isready -h 127.0.0.1 -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    networks: [private]
+
+  inference:
+    build:
+      context: ./inference_service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      USE_CUDA: "false"
+      NEUROSCAN_MODEL_ROOT: /workspace/NeuroScan_ML_Assets/models
+      PYTHONUNBUFFERED: "1"
+      OMP_NUM_THREADS: "2"
+    volumes:
+      - ./NeuroScan_ML_Assets/models:/workspace/NeuroScan_ML_Assets/models:ro
+    expose: ["8000"]
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import json,urllib.request; x=json.load(urllib.request.urlopen('http://127.0.0.1:8000/models',timeout=8))['models']; assert len(x)==3 and all(m['available'] for m in x)"
+      interval: 20s
+      timeout: 12s
+      retries: 10
+      start_period: 180s
+    networks: [private]
+
   backend:
     build:
       context: ./backend
-    container_name: brain-tumor-backend
-    ports:
-      - "5001:5000"
+      dockerfile: Dockerfile
+    restart: unless-stopped
     env_file:
       - ./backend/.env
     environment:
-      DB_HOST: host.docker.internal
-      DB_PORT: "5432"
+      NODE_ENV: production
       PORT: "5000"
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: ${DB_NAME:?Set DB_NAME in backend/.env}
+      DB_USER: ${DB_USER:?Set DB_USER in backend/.env}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in backend/.env}
+      FASTAPI_URL: http://inference:8000
+      CLIENT_ORIGINS: ${CLIENT_ORIGINS:-http://localhost:8080}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+    volumes:
+      - ./NeuroScan_ML_Assets/results:/workspace/NeuroScan_ML_Assets/results:ro
+    expose: ["5000"]
+    depends_on:
+      db:
+        condition: service_healthy
+      inference:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 8s
+      retries: 10
+      start_period: 45s
+    networks: [private]
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
+        VITE_DEMO_MODE: "false"
     restart: unless-stopped
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${APP_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [private]
+
+volumes:
+  postgres_data:
+
+networks:
+  private:
+    driver: bridge

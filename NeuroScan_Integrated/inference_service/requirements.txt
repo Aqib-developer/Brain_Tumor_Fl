@@ -1,7 +1,8 @@
-fastapi>=0.110.0,<0.115.0
-uvicorn[standard]>=0.29.0,<1.0
-python-multipart>=0.0.9,<1.0
-Pillow>=10,<13
-# Install CPU torch/torchvision separately using PyTorch's CPU wheel index.
-# torch and torchvision are required but deliberately not pinned here,
-# so users can select compatible CPU/GPU versions.
+# Reproducible CPU inference environment for NeuroScan.
+# torch==2.5.1 and torchvision==0.20.1 are installed by the Dockerfile
+# from the official PyTorch CPU wheel index before these packages.
+fastapi==0.115.12
+uvicorn[standard]==0.34.2
+python-multipart==0.0.20
+Pillow==11.2.1
+numpy==1.26.4
