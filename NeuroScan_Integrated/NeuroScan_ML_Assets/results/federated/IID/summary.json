@@ -1,0 +1,14 @@
+{
+  "scenario": "IID",
+  "best_round": 8,
+  "best_val_macro_f1": 0.9454785535656165,
+  "rounds_run": 8,
+  "n_clients": 4,
+  "client_sample_counts": {
+    "Hospital_A": 880,
+    "Hospital_B": 885,
+    "Hospital_C": 882,
+    "Hospital_D": 878
+  },
+  "architecture": "densenet121"
+}

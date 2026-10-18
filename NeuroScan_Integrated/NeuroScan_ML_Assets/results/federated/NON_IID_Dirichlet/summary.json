@@ -1,0 +1,14 @@
+{
+  "scenario": "NON_IID_Dirichlet",
+  "best_round": 8,
+  "best_val_macro_f1": 0.8391853386870775,
+  "rounds_run": 8,
+  "n_clients": 4,
+  "client_sample_counts": {
+    "Hospital_A": 1007,
+    "Hospital_B": 848,
+    "Hospital_C": 969,
+    "Hospital_D": 701
+  },
+  "architecture": "densenet121"
+}

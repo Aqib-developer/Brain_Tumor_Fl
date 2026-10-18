@@ -1,0 +1,14 @@
+{
+  "model": "Centralized",
+  "test_images": 422,
+  "accuracy": 0.985781990521327,
+  "precision_macro": 0.9860309182343081,
+  "recall_macro": 0.9851102967933509,
+  "f1_macro": 0.9855396303017254,
+  "f1_weighted": 0.9858045990499171,
+  "auc_no_tumor": 1.0,
+  "auc_meningioma": 0.9968165427090376,
+  "auc_glioma": 0.9962121212121212,
+  "auc_pituitary": 0.9999391301701311,
+  "roc_auc_macro_ovr": 0.9982419485228224
+}

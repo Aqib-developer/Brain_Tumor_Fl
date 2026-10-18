@@ -1,0 +1,7 @@
+fastapi>=0.110.0,<0.115.0
+uvicorn[standard]>=0.29.0,<1.0
+python-multipart>=0.0.9,<1.0
+Pillow>=10,<13
+# Install CPU torch/torchvision separately using PyTorch's CPU wheel index.
+# torch and torchvision are required but deliberately not pinned here,
+# so users can select compatible CPU/GPU versions.
