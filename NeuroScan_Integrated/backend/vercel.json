@@ -1,12 +1,12 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
   "services": {
     "backend": {
-      "root": "backend",
+      "root": "NeuroScan_Integrated/backend",
       "framework": "express"
     },
     "frontend": {
-      "root": "frontend",
+      "root": "NeuroScan_Integrated/frontend",
       "framework": "vite"
     }
   },
